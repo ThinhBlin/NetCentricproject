@@ -1,0 +1,6 @@
+PORT=8080
+# Replace user/pass with your local MySQL 8 credentials
+MYSQL_DSN=root:your_password@tcp(localhost:3306)/inventory_db_v2?parseTime=true&charset=utf8mb4&loc=Local
+# Must equal Spring's secreteJwtString (raw UTF-8, not base64)
+JWT_SECRET=${JWT_SECRET:mySecretKeymySecretKeymySecretKeymySecretKeymySecretKeymySecretKeymySecretKeymySecretKey}
+CORS_ORIGIN=http://localhost:5173
