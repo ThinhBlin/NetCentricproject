@@ -36,12 +36,12 @@ func JWTAuth(auth *services.AuthService) gin.HandlerFunc {
 		h := c.GetHeader("Authorization")
 		raw, ok := strings.CutPrefix(h, "Bearer ")
 		if !ok || raw == "" {
-			response.AbortError(c, http.StatusUnauthorized, "Missing or invalid token")
+			response.AbortError(c, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		u, err := auth.UserForToken(raw)
 		if err != nil {
-			response.AbortError(c, http.StatusUnauthorized, "Missing or invalid token")
+			response.AbortError(c, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 		c.Set(userKey, u)
@@ -61,7 +61,7 @@ func RequireRole(roles ...models.Role) gin.HandlerFunc {
 				}
 			}
 		}
-		response.AbortError(c, http.StatusForbidden, "Insufficient role")
+		response.AbortError(c, http.StatusForbidden, "Access denied")
 	}
 }
 

@@ -36,7 +36,15 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
-	routes.Register(router, auth, services.NewDashboardService(db), rl, cfg.CORSOrigin)
+	routes.Register(
+		router,
+		auth,
+		services.NewDashboardService(db),
+		services.NewProductService(db),
+		services.NewCategoryService(db),
+		rl,
+		cfg.CORSOrigin,
+	)
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

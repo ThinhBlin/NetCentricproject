@@ -1,59 +1,138 @@
 import React, { useEffect, useState } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import { api, setToken } from '../api/client'
+import { api } from '../api/client'
+import StatCard from '../components/StatCard'
+import CategoryChart from '../components/CategoryChart'
+import { ErrorState, Skeleton } from '../components/LoadingSpinner'
 
-const money = (n) => Number(n || 0).toLocaleString(undefined, { style: 'currency', currency: 'USD' })
-
-function Card({ label, value }) {
-  return (
-    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 16, minWidth: 160 }}>
-      <div style={{ color: '#666', fontSize: 13 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 600 }}>{value}</div>
-    </div>
-  )
+function formatCurrency(value) {
+  const amount = Number(value ?? 0)
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
-export default function Dashboard({ onLogout }) {
+function formatNumber(value) {
+  return Number(value ?? 0).toLocaleString()
+}
+
+export default function Dashboard() {
   const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
+  const loadStats = () => {
+    setLoading(true)
+    setError('')
     api('/dashboard/stats')
       .then((d) => setStats(d.dashboardStats))
-      .catch((e) => setError(e.message))
+      .catch((e) => setError(e.message || 'Unable to load dashboard metrics.'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadStats()
   }, [])
 
+  if (error) {
+    return (
+      <ErrorState
+        title="Failed to load dashboard"
+        message={error}
+        onRetry={loadStats}
+      />
+    )
+  }
+
   return (
-    <div style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <h2>Inventory Dashboard</h2>
-        <button onClick={() => { setToken(null); onLogout() }}>Log out</button>
-      </div>
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
-      {!stats && !error && <p>Loading...</p>}
-      {stats && (
-        <>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Card label="Active products" value={stats.totalActiveProducts} />
-            <Card label="Low stock" value={stats.lowStockCount} />
-            <Card label="Out of stock" value={stats.outOfStockCount} />
-            <Card label="Stock value" value={money(stats.totalStockValue)} />
-            <Card label="Inventory cost" value={money(stats.inventoryCost)} />
-            <Card label="Estimated margin" value={money(stats.estimatedMargin)} />
-          </div>
-          <h3>Stock by category</h3>
-          <div style={{ height: 300 }}>
-            <ResponsiveContainer>
-              <BarChart data={stats.warehouseStats || []}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="totalQuantity" name="Total quantity" fill="#4f46e5" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
+    <div>
+      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-slate-900">
+            Dashboard
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">
+            Inventory health, stock value, and category stock distribution at a glance.
+          </p>
+        </div>
+      </header>
+
+      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {loading ? (
+          <>
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-slate-200 bg-white p-5 shadow-soft"
+              >
+                <Skeleton className="mb-4 w-12 h-2" variant="text" />
+                <Skeleton className="w-24 h-4" variant="text" />
+                <Skeleton className="mt-2 w-32 h-8" variant="text" />
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <StatCard
+              label="Total Products"
+              value={formatNumber(stats?.totalActiveProducts)}
+              tone="primary"
+            />
+            <StatCard
+              label="Low Stock"
+              value={formatNumber(stats?.lowStockCount)}
+              tone="warning"
+            />
+            <StatCard
+              label="Out of Stock"
+              value={formatNumber(stats?.outOfStockCount)}
+              tone="error"
+            />
+            <StatCard
+              label="Stock Value (Retail)"
+              value={formatCurrency(stats?.totalStockValue)}
+              tone="success"
+            />
+            <StatCard
+              label="Inventory Cost"
+              value={formatCurrency(stats?.inventoryCost)}
+              tone="primary"
+            />
+            <StatCard
+              label="Estimated Margin"
+              value={formatCurrency(stats?.estimatedMargin)}
+              tone={(stats?.estimatedMargin ?? 0) >= 0 ? 'success' : 'error'}
+            />
+          </>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Stock by Category
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Stock quantity currently assigned to each category.
+          </p>
+        </div>
+
+        <div className="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-soft">
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="w-1/3 h-4" variant="text" />
+                  <Skeleton className="w-full h-4" variant="text" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <CategoryChart data={stats?.warehouseStats || []} />
+          )}
+        </div>
+      </section>
     </div>
   )
 }

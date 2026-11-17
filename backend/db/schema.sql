@@ -25,7 +25,10 @@ CREATE TABLE users (
 CREATE TABLE categories (
   id            BIGINT NOT NULL AUTO_INCREMENT,
   name          VARCHAR(255) NOT NULL,
+  description   VARCHAR(500) DEFAULT NULL,
+  is_active     BOOLEAN NOT NULL DEFAULT TRUE,
   display_order INT NOT NULL DEFAULT 0,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 );
 
@@ -33,11 +36,13 @@ CREATE TABLE products (
   id                BIGINT NOT NULL AUTO_INCREMENT,
   sku               VARCHAR(255) NOT NULL,
   name              VARCHAR(255) NOT NULL,
+  description       VARCHAR(255) DEFAULT NULL,
   price             DECIMAL(38,2) NOT NULL DEFAULT 0,
   stock_quantity    INT NOT NULL DEFAULT 0,
   reorder_threshold INT NOT NULL DEFAULT 10,
   category_id       BIGINT DEFAULT NULL,
   created_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at        DATETIME DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uq_products_sku (sku),
   KEY idx_products_category (category_id),

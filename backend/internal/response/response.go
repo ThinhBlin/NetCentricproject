@@ -10,14 +10,20 @@ import (
 
 // Response mirrors the old Spring `Response` class (null fields omitted).
 type Response struct {
-	Status         int          `json:"status"`
-	Message        string       `json:"message,omitempty"`
-	Token          string       `json:"token,omitempty"`
-	Role           string       `json:"role,omitempty"`
-	ExpirationTime string       `json:"expirationTime,omitempty"`
-	User           *models.User `json:"user,omitempty"`
-	DashboardStats any          `json:"dashboardStats,omitempty"`
-	Timestamp      string       `json:"timestamp"`
+	Status         int                `json:"status"`
+	Message        string             `json:"message,omitempty"`
+	Token          string             `json:"token,omitempty"`
+	Role           string             `json:"role,omitempty"`
+	ExpirationTime string             `json:"expirationTime,omitempty"`
+	User           *models.User       `json:"user,omitempty"`
+	DashboardStats any                `json:"dashboardStats,omitempty"`
+	Products       *[]models.Product  `json:"products,omitempty"`
+	Product        *models.Product    `json:"product,omitempty"`
+	Categories     *[]models.Category `json:"categories,omitempty"`
+	Category       *models.Category   `json:"category,omitempty"`
+	TotalElements  *int64             `json:"totalElements,omitempty"`
+	TotalPages     *int               `json:"totalPages,omitempty"`
+	Timestamp      string             `json:"timestamp"`
 }
 
 func New(status int, msg string) *Response {
